@@ -3,8 +3,9 @@ services:
     name: reva-electronics-backend
     runtime: node
     plan: starter
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && npm start
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
@@ -16,6 +17,7 @@ services:
   - type: web
     name: reva-electronics-frontend
     runtime: static
-    staticPublishPath: frontend/dist
-    buildCommand: cd frontend && npm install && npm run build
+    rootDir: frontend
+    staticPublishPath: dist
+    buildCommand: npm install && npm run build
     repo: https://github.com/shaktireferrals-coder/reva
