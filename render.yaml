@@ -18,5 +18,4 @@ services:
     runtime: static
     staticPublishPath: frontend/dist
     buildCommand: cd frontend && npm install && npm run build
-    region: oregon
     repo: https://github.com/shaktireferrals-coder/reva
