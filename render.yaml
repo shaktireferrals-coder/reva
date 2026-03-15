@@ -20,4 +20,7 @@ services:
     rootDir: frontend
     staticPublishPath: dist
     buildCommand: npm install && npm run build
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
     repo: https://github.com/shaktireferrals-coder/reva
