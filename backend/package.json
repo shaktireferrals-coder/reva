@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "main": "src/server.ts",
+  "engines": {
+    "node": ">=20.0.0 <24.0.0"
+  },
   "scripts": {
     "dev": "ts-node-dev src/server.ts",
     "build": "tsc",
