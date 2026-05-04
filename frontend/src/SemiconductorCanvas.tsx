@@ -1,5 +1,30 @@
 import React, { useRef, useEffect } from "react";
 
+class Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+
+  constructor(width: number, height: number) {
+    this.x = Math.random() * width;
+    this.y = Math.random() * height;
+    this.vx = (Math.random() - 0.5) * 0.5; // slow drift
+    this.vy = (Math.random() - 0.5) * 0.5;
+    this.radius = Math.random() * 1.5 + 0.5; // 0.5 to 2.0
+  }
+
+  update(width: number, height: number) {
+    this.x += this.vx;
+    this.y += this.vy;
+
+    // Bounce off edges smoothly
+    if (this.x <= 0 || this.x >= width) this.vx *= -1;
+    if (this.y <= 0 || this.y >= height) this.vy *= -1;
+  }
+}
+
 const SemiconductorCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -9,52 +34,74 @@ const SemiconductorCanvas: React.FC = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Resize canvas to fill parent
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    // Animation loop
     let animationFrameId: number;
+    let particles: Particle[] = [];
+    
+    const initParticles = () => {
+      particles = [];
+      // Adjust number of particles based on screen size to maintain performance
+      const numParticles = Math.floor((window.innerWidth * window.innerHeight) / 15000);
+      for (let i = 0; i < Math.min(numParticles, 150); i++) {
+        particles.push(new Particle(canvas.width, canvas.height));
+      }
+    };
+
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initParticles();
+    };
+
+    // Initial setup
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
     const draw = () => {
+      // Clear canvas completely to let CSS background show through
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      // Draw stylized traces and chips
-      for (let i = 0; i < 6; i++) {
-        ctx.save();
-        ctx.strokeStyle = i % 2 === 0 ? "#016064" : "#022D36";
-        ctx.lineWidth = 2 + Math.sin(Date.now() / 700 + i) * 1.2;
+
+      // Update and draw particles
+      particles.forEach((p) => {
+        p.update(canvas.width, canvas.height);
+        
         ctx.beginPath();
-        ctx.moveTo(120 + i * 180, 80);
-        ctx.bezierCurveTo(
-          200 + i * 180,
-          200 + Math.sin(Date.now() / 900 + i) * 60,
-          400 + i * 120,
-          100 + Math.cos(Date.now() / 1100 + i) * 80,
-          canvas.width - 120 - i * 80,
-          canvas.height - 80 - i * 40
-        );
-        ctx.stroke();
-        ctx.restore();
-      }
-      // Draw animated chips
-      for (let j = 0; j < 4; j++) {
-        ctx.save();
-        ctx.fillStyle = j % 2 === 0 ? "#016064" : "#022D36";
-        ctx.shadowColor = "#00bfae";
-        ctx.shadowBlur = 18;
-        ctx.beginPath();
-        ctx.rect(
-          220 + j * 260 + Math.sin(Date.now() / 800 + j) * 30,
-          180 + Math.cos(Date.now() / 900 + j) * 40,
-          60,
-          30
-        );
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
         ctx.fill();
-        ctx.restore();
+      });
+
+      // Draw connections
+      const connectDistance = 150;
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const distanceSq = dx * dx + dy * dy;
+
+          if (distanceSq < connectDistance * connectDistance) {
+            const distance = Math.sqrt(distanceSq);
+            // Opacity decreases as distance increases
+            const opacity = 1 - (distance / connectDistance);
+            
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.2})`;
+            ctx.lineWidth = 1;
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
       }
+
       animationFrameId = requestAnimationFrame(draw);
     };
+
     draw();
-    return () => cancelAnimationFrame(animationFrameId);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   return (

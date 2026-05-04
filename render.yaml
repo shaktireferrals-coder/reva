@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: reva-electronics-backend
+    runtime: node
+    plan: starter
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
+    region: oregon
+    repo: https://github.com/shaktireferrals-coder/reva
+
+  - type: web
+    name: reva-electronics-frontend
+    runtime: static
+    rootDir: frontend
+    staticPublishPath: dist
+    buildCommand: npm install && npm run build
+    repo: https://github.com/shaktireferrals-coder/reva
